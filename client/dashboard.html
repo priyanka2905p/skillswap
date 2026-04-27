@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="dash.css">
+
+</head>
+
+<body>
+
+  <h2>SkillSwap Dashboard</h2>
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <div class="container">
+
+    <h3>Welcome <span id="user"></span></h3>
+
+    <!-- ADD SKILL -->
+    <input id="skill" placeholder="Enter skill">
+
+    <select id="type">
+      <option value="teach">Teach</option>
+      <option value="learn">Learn</option>
+    </select>
+
+    <button onclick="addSkill()">Add Skill</button>
+
+    <br><br>
+
+    <!-- SEARCH -->
+    <input id="search" onkeyup="renderSkills()" placeholder="Search skills">
+
+    <!-- FILTER -->
+    <button onclick="filter('teach')">Teach</button>
+    <button onclick="filter('learn')">Learn</button>
+    <button onclick="loadSkills()">All</button>
+
+    <div id="skills"></div>
+
+  </div>
+
+  <script>
+
+    const token = localStorage.getItem("token");
+
+    // 🔐 AUTH CHECK
+    if (!token || token === "undefined") {
+      window.location.href = "login.html";
+    }
+
+
+    // ➕ ADD SKILL
+    async function addSkill() {
+      const skillInput = document.getElementById("skill");
+      const typeInput = document.getElementById("type");
+
+      const res = await fetch("http://127.0.0.1:5000/api/skills", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token
+        },
+        body: JSON.stringify({
+          skill_name: skillInput.value,
+          type: typeInput.value
+        })
+      });
+
+      const data = await res.json();
+      alert(data.message);
+
+      skillInput.value = "";
+      loadSkills();
+    }
+
+
+    // 📥 LOAD SKILLS
+    async function loadSkills() {
+      const res = await fetch("http://127.0.0.1:5000/api/skills", {
+        headers: {
+          "Authorization": token
+        }
+      });
+
+      const data = await res.json();
+
+      let html = "";
+
+      data.forEach(skill => {
+        html += `
+      <div class="card skill ${skill.type}">
+        <p>${skill.skill_name} (${skill.type})</p>
+        <button onclick="deleteSkill(${skill.id})">Delete</button>
+      </div>
+    `;
+      });
+
+      document.getElementById("skills").innerHTML = html;
+    }
+
+
+    // ❌ DELETE SKILL
+    async function deleteSkill(id) {
+      const res = await fetch(`http://127.0.0.1:5000/api/skills/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": token
+        }
+      });
+
+      const data = await res.json();
+      alert(data.message);
+
+      loadSkills();
+    }
+
+
+    // 🔍 SEARCH
+    async function renderSkills() {
+      const search = document.getElementById("search").value.toLowerCase();
+      const typeFilter = window.currentFilter || "all";
+
+      const res = await fetch("http://127.0.0.1:5000/api/skills", {
+        headers: { "Authorization": token }
+      });
+
+      const data = await res.json();
+
+      let html = "";
+
+      data
+        .filter(skill => {
+          return (
+            (typeFilter === "all" || skill.type === typeFilter) &&
+            skill.skill_name.toLowerCase().includes(search)
+          );
+        })
+        .forEach(skill => {
+          html += `
+        <div class="card skill ${skill.type}">
+          <p>${skill.skill_name} (${skill.type})</p>
+          <button onclick="deleteSkill(${skill.id})">Delete</button>
+        </div>
+      `;
+        });
+
+      document.getElementById("skills").innerHTML = html;
+    }
+
+    // 🎯 FILTER
+    function filter(type) {
+      window.currentFilter = type;
+      renderSkills();
+    }
+
+
+    // 🚪 LOGOUT
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+
+
+    // ▶ INIT
+    loadSkills();
+
+  </script>
+
+</body>
+
+</html>
