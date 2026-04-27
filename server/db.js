@@ -1,15 +1,22 @@
 const mysql = require("mysql2");
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "tiger",
-  database: "skillswap"
+  host: process.env.mysql.railway.internal,        // Railway MYSQLHOST
+  user: process.env.root,        // Railway MYSQLUSER
+  password: process.env.FncdOyvkUXhKoQaoWBOLQqPCZlMyVOdx,// Railway MYSQLPASSWORD
+  database: process.env.railway,    // Railway MYSQLDATABASE
+  ssl: {
+    rejectUnauthorized: true
+  }
 });
 
-db.connect(err => {
-  if (err) throw err;
-  console.log("MySQL Connected...");
+// Connect check (optional but useful)
+db.connect((err) => {
+  if (err) {
+    console.log("❌ DB Connection Failed:", err);
+  } else {
+    console.log("✅ Connected to Railway MySQL");
+  }
 });
 
 module.exports = db;
