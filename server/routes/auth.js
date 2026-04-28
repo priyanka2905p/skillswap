@@ -31,8 +31,9 @@ router.post("/signup", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // const { email, password } = req.body;
     console.log("req body:", req.body);
+
     const result = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [req.body.email]
@@ -67,7 +68,11 @@ router.post("/login", async (req, res) => {
     res.json({ token });
 
   } catch (err) {
-    res.status(500).json({ message: "Database error" });
+    console.log("full error:", error);
+    return res.status(500).json({
+      message: error.message,
+      stack: error.stack
+    });
   }
 });
 
