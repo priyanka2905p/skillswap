@@ -30,27 +30,39 @@ router.post("/signup", async (req, res) => {
 
 // Login
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
   try {
-    const result = await db.query(
+    const { email, password } = req.body;
+    console.log("req body:", req.body);
+    const result = await pool.query(
       "SELECT * FROM users WHERE email = $1",
-      [email]
+      [req.body.email]
     );
 
-    if (result.rows.length === 0) {
+    // if (result.rows.length === 0) {
+    //   return res.status(400).json({ message: "User not found" });
+    // }
+    console.log("db result:", result.rows);
+    const user = result.rows[0];
+    // if user not found
+    if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const user = result.rows[0];
+    // check password
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    const valid = await bcrypt.compare(password, user.password);
-
-    if (!valid) {
-      return res.status(400).json({ message: "Wrong password" });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password" });
     }
+    // const valid = await bcrypt.compare(password, user.password);
 
-    const token = jwt.sign({ id: user.id }, "secretkey");
+    // if (!valid) {
+    //   return res.status(400).json({ message: "Wrong password" });
+    // }
+
+    const token = jwt.sign({ id: user.id },
+      process.env.JWT_SECRET, { expiresIn: "id" }
+    );
 
     res.json({ token });
 
