@@ -57,7 +57,7 @@
       const skillInput = document.getElementById("skill");
       const typeInput = document.getElementById("type");
 
-      const res = await fetch("http://127.0.0.1:5000/api/skills", {
+      const res = await fetch(" https://skillswap-backend-05cv.onrender.com/api/skills", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +79,7 @@
 
     // 📥 LOAD SKILLS
     async function loadSkills() {
-      const res = await fetch("http://127.0.0.1:5000/api/skills", {
+      const res = await fetch(" https://skillswap-backend-05cv.onrender.com/api/skills", {
         headers: {
           "Authorization": token
         }
@@ -104,7 +104,7 @@
 
     // ❌ DELETE SKILL
     async function deleteSkill(id) {
-      const res = await fetch(`http://127.0.0.1:5000/api/skills/${id}`, {
+      const res = await fetch(` https://skillswap-backend-05cv.onrender.com/api/skills/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization": token
@@ -123,7 +123,7 @@
       const search = document.getElementById("search").value.toLowerCase();
       const typeFilter = window.currentFilter || "all";
 
-      const res = await fetch("http://127.0.0.1:5000/api/skills", {
+      const res = await fetch(" https://skillswap-backend-05cv.onrender.com/api/skills", {
         headers: { "Authorization": token }
       });
 
