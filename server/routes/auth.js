@@ -1,10 +1,12 @@
-console.log("Auth routes loaded");
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
 
 const router = express.Router();
+
+console.log("Auth routes loaded");
+
 
 // Signup
 router.post("/signup", async (req, res) => {
@@ -13,50 +15,48 @@ router.post("/signup", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    db.query(
-      "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-      [name, email, hashedPassword],
-      (err) => {
-        if (err) {
-          return res.status(500).json({ message: "Database error" });
-        }
-
-        // ✅ ALWAYS send JSON
-        res.json({ message: "Signup successful" });
-      }
+    await db.query(
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
+      [name, email, hashedPassword]
     );
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+
+    res.json({ message: "Signup successful" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Database error" });
   }
 });
+
+
 // Login
-router.post("/login", (req, res) => {
-  console.log("new login code ");
+router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  db.query("SELECT * FROM users WHERE email=?", [email], async (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Database error" });
-    }
+  try {
+    const result = await db.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
 
-    // ✅ User not found
-    if (result.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const user = result[0];
+    const user = result.rows[0];
 
     const valid = await bcrypt.compare(password, user.password);
 
-    // ✅ Wrong password
     if (!valid) {
       return res.status(400).json({ message: "Wrong password" });
     }
 
-    // ✅ Success
     const token = jwt.sign({ id: user.id }, "secretkey");
+
     res.json({ token });
-  });
+
+  } catch (err) {
+    res.status(500).json({ message: "Database error" });
+  }
 });
 
 module.exports = router;
